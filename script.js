@@ -1,3 +1,5 @@
+// ADD FUNCTION TO CHECK WIN STATE AND PLAYER WHO WON
+
 //  2D array to store the game state for game board
 
 const gameBoardItems = [
@@ -5,38 +7,6 @@ const gameBoardItems = [
     ['', '', ''],
     ['', '', ''],
 ];
-
-// function to populate each cell of the table with the current game board state
-
-function initializeCells() { 
-    const table = document.querySelector('#game-board'); 
-
-    if (table) { // if game board exists 
-        const rows = table.getElementsByTagName('tr'); // get all rows in the table
-
-        for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            const cells = row.getElementsByTagName('td'); // get all cells in the current row
-
-            for (let j = 0; j < cells.length; j++) {
-                const cell = cells[j];
-
-                // update a cell's text content with the corresponding value from gameBoardItems
-
-                cell.innerText = gameBoardItems[i][j] || "null"; // use "null" as a placeholder for empty cells
-            }
-        }
-    } else {
-        alert("Cannot find game board");
-    }
-}
-
-// initialize the game board 
-initializeCells();
-
-// initialize players
-let playerOne = "X";
-let playerTwo = "O";
 
 // click event listener
 document.addEventListener('DOMContentLoaded', function() {
