@@ -20,8 +20,8 @@ td {
 
 .visible {
     display: block;
-    margin-top: 20px;
     padding: 10px;
     border: 1px solid #ccc;
     width: fit-content;
+    margin: 20px auto;
 }
