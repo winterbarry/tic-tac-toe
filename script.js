@@ -1,96 +1,141 @@
-document.addEventListener('DOMContentLoaded', function() {
+// player factoy
+const playerFactory = (name, marker) => ({
+    name,
+    marker
+});
+
+gameBoard = (() => {
     // element where game messages will be displayed
-    const message = document.getElementById('placeholder'); 
-    
-    // select all cells in the tic-tac-toe game board
-    const cells = document.querySelectorAll('#game-board td'); 
-    
-    // player X starts the game
-    let currentPlayer = 'X'; 
+    let message = document.getElementById('placeholder');
+
+    let cells = document.querySelectorAll('#game-board td'); 
 
     // 2D array to store the game state of the board
-    const gameBoardItems = [
+    let board = [
         ['', '', ''],
         ['', '', ''],
         ['', '', ''],
     ];
 
-    // array of all possible winning conditions
-    const winConditions = [
-        [[0, 0], [0, 1], [0, 2]], 
-        [[1, 0], [1, 1], [1, 2]], 
-        [[2, 0], [2, 1], [2, 2]], 
-        [[0, 0], [1, 0], [2, 0]], 
-        [[0, 1], [1, 1], [2, 1]], 
-        [[0, 2], [1, 2], [2, 2]], 
-        [[0, 0], [1, 1], [2, 2]], 
-        [[0, 2], [1, 1], [2, 0]], 
-    ];
-
-    // display a game message and make it visible
+    // set message in placeholder
     function setMessage(text) {     
         message.textContent = text; 
         message.classList.remove('hidden'); 
         message.classList.add('visible'); 
     }
 
-    // remove event listeners from all cells, stopping further input
-    function disableInput() {
-        cells.forEach(cell => cell.removeEventListener('click', handleClick));
+    // reset text content in the table cells
+    function resetBoard() {
+        cells.forEach(cell => {
+            cell.textContent = '';
+        });
+    
+        // clear each cell in the 2d array
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+                board[row][col] = ''; 
+            }
+        }
     }
 
-    // handle a click event on a cell
+    return { resetBoard, setMessage, cells, board };
+})();
+
+mainLogic = (() => {
+    const player1 = playerFactory("Player 1", "X");
+    const player2 = playerFactory("Player 2", "O");
+    let currentPlayer = player1;
+
+    // Handle a click event on a cell
     function handleClick(event) {
-        const clickedCell = event.target; // get the cell that was clicked
-        const cellIndex = Array.from(cells).indexOf(clickedCell); // get the index of the clicked cell in the 1D cell array
-        const row = Math.floor(cellIndex / 3); // calculate the row index 
-        const col = cellIndex % 3; // calculate the column index 
+        const clickedCell = event.target; // get the clicked cell
+        const cellIndex = Array.from(gameBoard.cells).indexOf(clickedCell); // get the index of the clicked cell in the 1D cell array
+        const row = Math.floor(cellIndex / 3); // calculate the row index
+        const col = cellIndex % 3; // calculate the column index
 
         // ignore click on occupied cells
-        if (gameBoardItems[row][col] !== '') {
+        if (gameBoard.board[row][col] !== '') {
             return;
         }
 
         // update the game board and table with the current player's marker
-        gameBoardItems[row][col] = currentPlayer;
-        clickedCell.textContent = currentPlayer;
+        gameBoard.board[row][col] = currentPlayer.marker;
+        clickedCell.textContent = currentPlayer.marker;
 
-        // toggle between player'X' and 'O'
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-
-        // display the next player's turn
-        setMessage(`Player ${currentPlayer}'s turn`);
-
-        // check for a winner
-        function checkWinner(gameBoardItems, winConditions) {
-            for (let condition of winConditions) {
-                // check if all cells in a winning condition belong to player 'X'
-                if (condition.every(([row, col]) => gameBoardItems[row][col] === 'X')) {
-                    setMessage("Player X won!"); 
-                    disableInput(); 
-                    return;
-                }
-                // check if all cells in a winning condition belong to player 'O'
-                if (condition.every(([row, col]) => gameBoardItems[row][col] === 'O')) {
-                    setMessage("Player O won!"); 
-                    disableInput(); 
-                    return;
-                }
-            }
-            return null; // return null if no winner is found
+        // check for a winner or tie
+        if (checkWinner()) {
+            return;
         }
 
-        // check if the board is full 
-        const isBoardFull = gameBoardItems.flat().every(cell => cell !== '');
-        if (isBoardFull) {
-            setMessage("It's a tie!"); 
-            disableInput(); 
-            return; 
-        }
+        // toggle between players
+        currentPlayer = currentPlayer === player1 ? player2 : player1;
 
-        checkWinner(gameBoardItems, winConditions);
+        // show the next player's turn
+        gameBoard.setMessage(`${currentPlayer.name}'s turn!`);
     }
 
-    // click event listener for each cell in the game board
-    cells.forEach(cell => cell.addEventListener('click', handleClick)); 
-});
+    function disableInput() {
+        gameBoard.cells.forEach(cell => cell.removeEventListener('click', handleClick));
+    }
+
+    function checkWinner() {
+        const winConditions = [
+            [[0, 0], [0, 1], [0, 2]], 
+            [[1, 0], [1, 1], [1, 2]], 
+            [[2, 0], [2, 1], [2, 2]], 
+            [[0, 0], [1, 0], [2, 0]], 
+            [[0, 1], [1, 1], [2, 1]], 
+            [[0, 2], [1, 2], [2, 2]], 
+            [[0, 0], [1, 1], [2, 2]], 
+            [[0, 2], [1, 1], [2, 0]], 
+        ];
+
+        for (let condition of winConditions) {
+            // if all cells in a winning condition belong to player1
+            if (condition.every(([row, col]) => gameBoard.board[row][col] === player1.marker)) {
+                gameBoard.setMessage("Player X won!");
+                disableInput();
+                return true; 
+            }
+            // if all cells in a winning condition belong to player2
+            if (condition.every(([row, col]) => gameBoard.board[row][col] === player2.marker)) {
+                gameBoard.setMessage("Player O won!");
+                disableInput();
+                return true; 
+            }
+        }
+
+        // if the board is full / tie condition
+        const isBoardFull = gameBoard.board.flat().every(cell => cell !== '');
+        if (isBoardFull) {
+            gameBoard.setMessage("It's a tie!");
+            disableInput();
+            return true; 
+        }
+
+        return false; 
+    }
+
+    function restartGame() {
+        gameBoard.resetBoard();
+        currentPlayer = player1;
+        gameBoard.setMessage(`${currentPlayer.name}'s turn!`);
+        console.log("Game restarted. Current board state is:");
+        console.log(gameBoard.board);
+    }
+
+    return { handleClick, restartGame };
+})();
+
+domManager = (() => {
+    const resetButton = document.getElementById('resetButton');
+
+    function initialize() {
+        gameBoard.cells.forEach(cell => cell.addEventListener('click', mainLogic.handleClick)); 
+        resetButton.addEventListener('click', mainLogic.restartGame);
+    }
+
+    return {initialize};
+})();
+
+document.addEventListener('DOMContentLoaded', domManager.initialize);
